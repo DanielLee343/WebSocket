@@ -1,0 +1,395 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta name="keywords" content="keyword1,keyword2,keyword3">
+    <meta name="description" content="this is my page">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>嗨能聊天室</title>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap-theme.css" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap-theme.css.map" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap-theme.min.css" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap-theme.min.css.map" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css.map" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css.map" />
+    <!-- <link rel="stylesheet" type="text/css" href="css/bootstrap.main.css" /> -->
+    <script type="text/javascript" src="js/bootstrap.js" ></script>
+		<script type="text/javascript" src="js/bootstrap.min.js" ></script>
+		<script src="http://cdn.static.runoob.com/libs/jquery/2.1.1/jquery.min.js"></script>
+		<script src="http://cdn.static.runoob.com/libs/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<script src="js/jquery.js"></script>
+    
+    <style type="text/css">
+        input#chat {
+            width: 400px
+        }
+
+         #console-container {
+            width: 85%;
+        } 
+
+        #console {
+            border: 1px solid #CCCCCC;
+            border-right-color: #999999;
+            border-bottom-color: #999999;
+            height: 250px;
+            overflow-y: scroll;
+            padding: 5px;
+            width: 100%;
+            position:relative;
+            margin-top:80px;
+            margin-left:50px;
+        }
+        #console2{
+        	border: 1px solid #CCCCCC;
+            border-right-color: #999999;
+            border-bottom-color: #999999;
+            height: 250px;
+            overflow-y: scroll;
+            padding: 5px;
+            width: 100%;
+            position:relative;
+            margin-top:50px; 
+            margin-left:50px;
+        }
+
+        
+    </style>
+    <script type="application/javascript">
+    
+       
+        
+        var Chat = {},Chat2={};
+
+        Chat.socket = null;
+        Chat2.socket = null;
+
+        Chat.connect = (function(host) {
+            if ('WebSocket' in window) {
+                Chat.socket = new WebSocket(host);
+            } else if ('MozWebSocket' in window){//考虑浏览器兼容性
+                Chat.socket = new MozWebSocket(host);
+            } else {
+                Console.log('Error: WebSocket is not supported by this browser.','console');
+                return;
+            }
+
+            Chat.socket.onopen = function () {
+                Console.log('Info: WebSocket connection opened.','console');
+                document.getElementById('chat').onkeydown = function(event) {
+                    /* console.log("enter"); */
+                    if (event.keyCode == 13) {
+                        Chat.sendMessage();
+                    }
+                };
+            };
+            
+
+            Chat.socket.onclose = function () {
+                document.getElementById('chat').onkeydown = null;
+                Console.log('Info: WebSocket closed.','console');
+            };
+
+            Chat.socket.onmessage = function (message) {
+                
+                if(message.data.startsWith("102b")){
+                
+                	var a = message.data;
+                	a = a.replace("102b","");
+                	a=JSON.parse(a);
+                	for(var i = 0; i<a.length;i++){
+                		/* $("#select1").append("<option value=\""+a[i].nickname+"\"">+a[i].nickname+"</option>"); */
+                		$("#select1").append("<option >"+a[i].nickname+"</option>");
+                		
+                	}
+                }else if(message.data.startsWith("101b")){
+                	var s = message.data.replace("101b","");
+                	Console.log(s,'console');
+                }
+            };
+            
+            
+        });
+        /* Console2.log=Console.log */
+        Chat2.connect = (function(host) {
+            if ('WebSocket' in window) {
+                Chat2.socket = new WebSocket(host);
+            } else if ('MozWebSocket' in window) {
+                Chat2.socket = new MozWebSocket(host);
+            } else {
+                Console.log('Error: WebSocket is not supported by this browser.','console2');
+                return;
+            }
+			
+            Chat2.socket.onopen = function () {
+                Console.log('Info: WebSocket connection opened.','console2');
+                document.getElementById('chat2').onkeydown = function(event) {
+                    /* console2.log("enter"); */
+                    if (event.keyCode == 13) {
+                        Chat2.sendMessage();
+                    }
+                };
+            };
+            
+
+            Chat2.socket.onclose = function () {
+                document.getElementById('chat2').onkeydown = null;
+                Console.log('Info: WebSocket closed.','console2');
+            };
+
+            Chat2.socket.onmessage = function (message) {
+            //alert(message);
+                Console.log(message.data,'console2');
+                /* if(message.data.startsWith("102b")){
+                
+                	var a = message.data;
+                	a = a.replace("102b","");
+                	a=JSON.parse(a);
+                	for(var i = 0; i<a.length;i++){
+                		 $("#select1").append("<option value=\""+a[i].nickname+"\"">+a[i].nickname+"</option>"); 
+                		$("#select1").append("<option >"+a[i].nickname+"</option>");
+                	}
+                	
+                }else if(message.data.startsWith("101b")){
+                	var s = message.data.replace("101b","");
+                	$('#console2').innerHTML+='<p>'+s+'</p>'	
+                	console.log(s);
+                } */
+            };
+            
+            
+        });
+		
+        Chat.initialize = function() {
+            if (window.location.protocol == 'http:') {
+                Chat.connect('ws://' + window.location.host + '/WebSocket/websocket/chat');
+            } else {
+                Chat.connect('wss://' + window.location.host + '/WebSocket/websocket/chat');
+            }
+        };
+
+        Chat.sendMessage = (function() {
+            var message = document.getElementById('chat').value;
+            //要是里面不为空，发送，然后清除内容
+            if (message != '') {
+                Chat.socket.send("101"+message);
+                document.getElementById('chat').value = '';
+            }
+        });
+
+        var Console = {};
+
+        Console.log = (function(message,id) {
+            var console = document.getElementById(id);
+            var p = document.createElement('p');
+            p.style.wordWrap = 'break-word';
+            p.innerHTML = message;
+            console.appendChild(p);
+            while (console.childNodes.length > 25) {
+                console.removeChild(console.firstChild);
+            }
+            console.scrollTop = console.scrollHeight;
+        });
+		
+        Chat.initialize();
+
+
+        document.addEventListener("DOMContentLoaded", function() {
+            // Remove elements with "noscript" class - <noscript> is not allowed in XHTML
+            var noscripts = document.getElementsByClassName("noscript");
+            for (var i = 0; i < noscripts.length; i++) {
+                noscripts[i].parentNode.removeChild(noscripts[i]);
+            }
+        }, false);
+        
+        
+        
+        
+        
+        
+        
+        
+        Chat2.initialize = function() {
+            if (window.location.protocol == 'http:') {
+                Chat2.connect('ws://' + window.location.host + '/WebSocket/websocket/chat2');
+            } else {
+                Chat2.connect('wss://' + window.location.host + '/WebSocket/websocket/chat2');
+            }
+        };
+
+        Chat2.sendMessage = (function() {
+            var message = document.getElementById('chat2').value;
+            Console.log("我："+message, 'console2');
+            if (message != '') {
+            	var options=$("#select1 option:selected");
+            	var hh = options.text();
+                Chat2.socket.send("101"+message+hh);
+                document.getElementById('chat2').value = '';
+            }
+        });
+
+        var Console2 = {};
+
+        /* Console2.log = (function(message) {
+            var console2 = document.getElementById('console2');
+            var p = document.createElement('p');
+            p.style.wordWrap = 'break-word';
+            p.innerHTML = message;
+            console2.appendChild(p);
+            while (console2.childNodes.length > 25) {
+                console2.removeChild(console2.firstChild);
+            }
+            console2.scrollTop = console2.scrollHeight;
+        }); */
+		
+        Chat2.initialize();
+/* 
+	document.addEventListener("DOMContentLoaded", function() {
+            // Remove elements with "noscript" class - <noscript> is not allowed in XHTML
+            var noscripts = document.getElementsByClassName("noscript");
+            for (var i = 0; i < noscripts.length; i++) {
+                noscripts[i].parentNode.removeChild(noscripts[i]);
+            }
+        }, false);
+ */
+    </script>
+</head>
+<body background = "https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1516385093970&di=277ba11e535e4a324f18fea70b1b3248&imgtype=0&src=http%3A%2F%2Fimg.zcool.cn%2Fcommunity%2F01e7fd5541c9790000011541cf8a16.jpg%402o.jpg">
+	<script src="js/bootstrap.js"></script>
+	<script src="js/bootstrap.min.js"></script>
+	<script src="js/html5.js"></script>
+	<div class="noscript"><h2 style="color: #ff0000">Seems your browser doesn't support Javascript! Websockets rely on Javascript being enabled. Please enable
+	    Javascript and reload this page!</h2>
+	</div>
+	
+	<header>
+		<nav class="navbar navbar-inverse navbar-fixed-top">
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>                        
+			</button>
+			<a class="navbar-brand" href="#" style="font-family:'幼圆';font-weight:bolder;font-size:25px">嗨能聊天室&nbsp&nbsp&nbsp&nbsp</a>
+		</div>
+		<div>
+			<div class="collapse navbar-collapse" id="myNavbar">
+				<ul class="nav navbar-nav">
+					<li><a href="">主页&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</a></li>
+					<li><a href="">好友&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</a></li>
+					<li><a href="">群聊&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</a></li>
+					<li><a href="">关于我</a></li>
+				</ul>
+			</div>
+		</div>
+	</div>
+</nav>    
+	</header>
+	    
+	<div>
+	
+	<div style="background:#000">
+	    <br/>
+		<div class="page-header">
+		    <h1 style="color:white">&nbsp&nbsp&nbsp&nbsp聊天&nbsp&nbsp
+		        <small>Happy chatting!</small>
+		    </h1>
+		</div>
+	</div>
+	
+	
+	    <div id="console-container">
+	    
+	        <div id="console"/>
+
+	    </div>
+ 		</br>
+ 		
+ 		
+ 		
+		<div class="row" >
+			<div class="col-lg-15">
+				<div class="input-group">
+					<input type="text" style="left:65px;" class="form-control" placeholder=" type and press enter to chat" id="chat" /> 
+					<span class="input-group-btn">
+					</span>
+				</div>
+			</div>
+		</div>
+		
+		<br/><br/>
+		<div class="container">
+			<div class="row clearfix">
+				<div class="col-md-12 column" style = "left:-24px;width:1320px;">
+					<div class="alert alert-dismissable alert-info" >
+				 		<button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+						<h4>
+						请点击刷新以获取在线好友
+						</h4> 
+						<strong>Refresh.</strong> Then you can get your online friends~
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<br/>
+		<button type="submit" class="btn btn-primary" onClick="add()" style="width:100px;margin-left:50px">刷新</button>
+		<select class="selectpicker"  name="select1" id="select1" style="width:160px;margin-left:52px;height:35px">
+		</select>
+		
+		
+		<!-- <input type="button"  value="刷新"> -->
+<!-- 		<select  id="select1" style="width:100px">
+			
+		</select> -->
+		
+		
+		<div id="console2">
+			
+		</div>
+		<br/>
+		<div class="row">
+			<div class="col-lg-15">
+				<div class="input-group">
+					<input type="text" style = "left:65px;width:400px"class="form-control" placeholder=" type and press enter to chat" id="chat2" /> 
+					<span class="input-group-btn">
+					</span>
+				</div>
+			</div>
+		</div>
+		<br/>
+		
+	</div>
+	<div class=" text-center text-white" style="background-color:#140C09;color:#fff; height:130px">
+		   <div class="bg-dark">
+	        <div style="height:10px"></div>
+	       <div >
+	        	<a href="#" target=_blank style="color:white">网站地图</a> |
+	            <a href="#" target=_blank style="color:white">网站申明</a> |
+	            <a href="#" target=_blank style="color:white">联系我们</a> |
+	            <a href="#" target=_blank style="color:white">使用帮助</a> |
+	            <a href="#" target=_blank style="color:white">主编邮箱</a> 
+	         </div>
+	         <div style="height:10px"></div>
+	         <div>
+	           主办：东北大学软件学院&nbsp;&nbsp;&nbsp;&nbsp;
+	         </div>
+	         <div style="height:10px"></div>
+	         <div>  
+	           邮箱：394691285@qq.com　辽ICP备064068804　辽公网安备 71898202708132号
+	      	</div>
+	       	<img src="img/codeispoetry.png">
+	       	</div>
+	    </div>
+
+	<script type="text/javascript">
+		function add(){
+			Chat.socket.send("102");
+		}
+
+	</script>
+	
+</body>
+</html>
